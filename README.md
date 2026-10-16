@@ -38,14 +38,17 @@ dotnet build Archy.slnx
 dotnet run --no-build --project tests/ecs
 dotnet run --no-build --project tests/api
 dotnet run --no-build --project tests/ecs-generator
+dotnet run --no-build --project benchmarks/Archy.Benchmarks -- --verify
 dotnet build Archy.slnx -c Release
 dotnet run --no-build --project tests/ecs -c Release
 dotnet run --no-build --project tests/api -c Release
 dotnet run --no-build --project tests/ecs-generator -c Release
+dotnet run --no-build --project benchmarks/Archy.Benchmarks -c Release -- --verify
 ```
 
-The Arch adapter restores Arch 2.1.0; the generator restores Roslyn. The API-only
-checks use the supported naive adapter and run without the Arch package.
+The Arch adapter restores Arch 2.1.0; the generator restores Roslyn; the benchmark
+project restores BenchmarkDotNet. The API-only checks use the supported naive
+adapter and run without the Arch package.
 
 ## Consumer setup
 
@@ -170,6 +173,18 @@ True
 Store restoration selects an adapter through a factory:
 `serializer.ReadStore(json, static () => new ArchStorage())`. Each call must create
 fresh storage; the restored store owns it and disposes it if loading fails.
+
+## Benchmarks
+
+[`benchmarks/Archy.Benchmarks`](benchmarks/Archy.Benchmarks/README.md) compares direct
+Arch, Archy with Arch storage, and Archy with naive storage across six workloads:
+world loading, movement, actor activation, projectile churn, spatial lookups and
+deferred damage notifications. It includes reference-model verification and
+BenchmarkDotNet timing/allocation runs.
+
+```sh
+dotnet run --project benchmarks/Archy.Benchmarks -c Release -- --smoke
+```
 
 ## Reference
 

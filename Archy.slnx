@@ -6,4 +6,5 @@
   <Project Path="tests/ecs/Archy.Tests.csproj" />
   <Project Path="tests/api/Archy.Api.Tests.csproj" />
   <Project Path="tests/ecs-generator/Archy.Generator.Tests.csproj" />
+  <Project Path="benchmarks/Archy.Benchmarks/Archy.Benchmarks.csproj" />
 </Solution>
