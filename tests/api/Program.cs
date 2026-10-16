@@ -28,4 +28,5 @@ PrefabGraphChecks.Run();
 PrefabSerializationChecks.Run();
 WorkflowChecks.Run();
 AdapterContractChecks.Run();
+NaiveStorageChecks.Run();
 Console.WriteLine($"API checks passed without Arch: {Check.Count}.");

@@ -1,6 +1,6 @@
 # Standalone ECS replacement with generated indexes and scoped events
 
-The current API layer and Arch adapter are documented in
+The current API layer and storage adapters are documented in
 [storage and integration](../src/ecs/IMPLEMENTATION.md). Adapter requirements are
 defined in [adding an adapter](adapters.md).
 
@@ -106,7 +106,7 @@ the existing solution without migrating the running game as part of this feature
 
 ## Implementation Decisions
 
-- Build the engine-independent Archy API layer and a separate Archy.Adapters.Arch storage adapter. Only the adapter references Arch. Keep indexes, events, relationships, commands, queries, systems, serialization and prefabs in the API layer. Applications supply fresh storage explicitly when constructing or restoring stores. Keep the source generator separate and reference it from component assemblies.
+- Build the engine-independent Archy API layer and a separate Archy.Adapters.Arch storage adapter. Only the Arch adapter references Arch; the naive adapter uses managed arrays and dictionaries with no third-party dependencies. Keep indexes, events, relationships, commands, queries, systems, serialization and prefabs in the API layer. Applications supply fresh storage explicitly when constructing or restoring stores. Keep the source generator separate and reference it from component assemblies.
 - Target the runtime and adapter at .NET 10 and the Roslyn generator at .NET Standard 2.0. Keep game-engine, gameplay, Arch and Roslyn dependencies out of the API layer. The Arch adapter consumes Arch 2.1.0 through NuGet. Application identity types remain ordinary component data.
 - Put storage behind IEntityStorage, IStorageArchetype and IStorageChunk. Adapters own dense chunked component arrays, structural transitions, swap removal and vacated-row cleanup. The API layer owns composition masks, cached query plans and public slot locations. Keep native types private to each adapter.
 - Use a single writer. All public accesses validate store identity and entity generation. Handles survive structural moves; default, reserved, deleted, and disposed-store handles are not alive. Retire slots instead of wrapping generations. Runtime handles are distinct from persisted application identity components.
@@ -157,7 +157,7 @@ the existing solution without migrating the running game as part of this feature
 - Cover command FIFO behavior, reserved handles, reservation cancellation, buffered try tickets, branch evaluation at playback, failures preserving only the completed prefix, canceled unexecuted tickets, stream consumption, and custom emission relative to create/delete/failure.
 - Cover explicit system order, tick/context delivery, command/event checkpoints, and handler-command visibility through the public pipeline rather than private scheduling details.
 - Cover component/store round trips, persistence versions/migrations, duplicate keys, unique-key conflicts, reference cycles, invalid-load isolation, index reconstruction, prefab variants, graph remapping, external bindings, and template/instance independence.
-- Run the solution build and all README runtime, API-only and generator checks in Debug and Release. The API-only suite shares behavior checks with the Arch suite and uses a test adapter without Arch dependencies. Run export-configuration builds for runtime/adapter wiring changes. No rendered or engine startup checks apply.
+- Run the solution build and all README runtime, API-only and generator checks in Debug and Release. The API-only suite shares behavior checks with the Arch suite and uses the supported naive adapter without Arch dependencies. Run export-configuration builds for runtime/adapter wiring changes. No rendered or engine startup checks apply.
 
 ## Out of Scope
 
@@ -176,5 +176,7 @@ the existing solution without migrating the running game as part of this feature
 
 The runtime API layer and source generator are implemented. The Arch adapter is
 in `src/adapters/arch/Archy.Adapters.Arch.csproj` and depends on the API layer in
-`src/ecs/Archy.csproj`. Additional adapters implement the storage contracts without
+`src/ecs/Archy.csproj`. The minimal managed adapter is in
+`src/adapters/naive/Archy.Adapters.Naive.csproj`. Additional adapters implement the
+storage contracts without
 changing the public entity, query, mutation, event or persistence behavior.

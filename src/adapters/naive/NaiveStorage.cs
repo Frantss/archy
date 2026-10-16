@@ -1,29 +1,36 @@
 using Archy.Storage;
 
-namespace Archy.Tests;
+namespace Archy.Adapters.Naive;
 
-internal sealed class MemoryStorage : IEntityStorage {
-  private readonly List<MemoryArchetype> _archetypes = [];
-  public bool Disposed { get; private set; }
+public sealed class NaiveStorage : IEntityStorage {
+  private readonly List<NaiveArchetype> _archetypes = [];
+  private bool _disposed;
 
-  public void Register<T>() where T : struct { }
+  public void Register<T>() where T : struct => this.EnsureActive();
 
   public IStorageArchetype CreateArchetype(ReadOnlySpan<Type> types) {
-    var archetype = new MemoryArchetype(types.ToArray());
+    this.EnsureActive();
+    var archetype = new NaiveArchetype(types.ToArray());
     this._archetypes.Add(archetype);
 
     return archetype;
   }
 
-  public void PrepareCapacity(IStorageArchetype archetype, int count) =>
-    ((MemoryArchetype)archetype).PrepareCapacity(count);
+  public void PrepareCapacity(IStorageArchetype archetype, int count) {
+    this.EnsureActive();
+    ((NaiveArchetype)archetype).PrepareCapacity(count);
+  }
 
-  public StorageLocation Create(IStorageArchetype archetype, StorageIdentity identity) =>
-    ((MemoryArchetype)archetype).Append(identity);
+  public StorageLocation Create(IStorageArchetype archetype, StorageIdentity identity) {
+    this.EnsureActive();
+
+    return ((NaiveArchetype)archetype).Append(identity);
+  }
 
   public StorageLocation Move(StorageLocation source, (IStorageArchetype Target, Type Type, bool Add) change) {
-    var from = (MemoryArchetype)source.Archetype;
-    var target = (MemoryArchetype)change.Target;
+    this.EnsureActive();
+    var from = (NaiveArchetype)source.Archetype;
+    var target = (NaiveArchetype)change.Target;
     var chunk = from.GetChunk(source.ChunkIndex);
     var destination = target.Append(chunk.Identities[source.Row]);
     var next = target.GetChunk(destination.ChunkIndex);
@@ -39,10 +46,11 @@ internal sealed class MemoryStorage : IEntityStorage {
   }
 
   public void Remove(StorageLocation location) {
-    var archetype = (MemoryArchetype)location.Archetype;
+    this.EnsureActive();
+    var archetype = (NaiveArchetype)location.Archetype;
     var lastIndex = archetype.EntityCount - 1;
-    var last = archetype.GetChunk(lastIndex / MemoryArchetype.Capacity);
-    var row = lastIndex % MemoryArchetype.Capacity;
+    var last = archetype.GetChunk(lastIndex / NaiveArchetype.Capacity);
+    var row = lastIndex % NaiveArchetype.Capacity;
     var target = archetype.GetChunk(location.ChunkIndex);
     target.Identities[location.Row] = last.Identities[row];
     last.Identities[row] = default;
@@ -57,20 +65,25 @@ internal sealed class MemoryStorage : IEntityStorage {
   }
 
   public void Dispose() {
+    if (this._disposed) return;
+
+    this._disposed = true;
+
     foreach (var archetype in this._archetypes) archetype.Clear();
 
     this._archetypes.Clear();
-    this.Disposed = true;
   }
 
-  private sealed class MemoryArchetype : IStorageArchetype {
+  private void EnsureActive() => ObjectDisposedException.ThrowIf(this._disposed, this);
+
+  private sealed class NaiveArchetype : IStorageArchetype {
     public const int Capacity = 64;
-    private readonly List<MemoryChunk> _chunks = [];
+    private readonly List<NaiveChunk> _chunks = [];
     public Type[] Types { get; }
     public int EntityCount { get; set; }
     public int ChunkCount => (this.EntityCount + Capacity - 1) / Capacity;
 
-    public MemoryArchetype(Type[] types) => this.Types = types;
+    public NaiveArchetype(Type[] types) => this.Types = types;
 
     public IStorageChunk GetChunk(int index) => this._chunks[index];
 
@@ -100,23 +113,23 @@ internal sealed class MemoryStorage : IEntityStorage {
     }
   }
 
-  private sealed class MemoryChunk : IStorageChunk {
-    private readonly MemoryArchetype _owner;
+  private sealed class NaiveChunk : IStorageChunk {
+    private readonly NaiveArchetype _owner;
     private readonly int _index;
     public Dictionary<Type, Array> Values { get; }
-    public StorageIdentity[] Identities { get; } = new StorageIdentity[MemoryArchetype.Capacity];
+    public StorageIdentity[] Identities { get; } = new StorageIdentity[NaiveArchetype.Capacity];
     public int Count => Math.Clamp(
-      this._owner.EntityCount - this._index * MemoryArchetype.Capacity,
+      this._owner.EntityCount - this._index * NaiveArchetype.Capacity,
       0,
-      MemoryArchetype.Capacity
+      NaiveArchetype.Capacity
     );
 
-    public MemoryChunk(MemoryArchetype owner, int index) {
+    public NaiveChunk(NaiveArchetype owner, int index) {
       this._owner = owner;
       this._index = index;
       this.Values = owner.Types.ToDictionary(
         type => type,
-        type => Array.CreateInstance(type, MemoryArchetype.Capacity)
+        type => Array.CreateInstance(type, NaiveArchetype.Capacity)
       );
     }
 

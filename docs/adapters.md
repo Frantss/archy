@@ -65,7 +65,7 @@ the dense chunk contract at this seam.
 
 ## Implementation and checks
 
-1. Create an adapter project referencing the API layer and its own native library.
+1. Create an adapter project referencing the API layer and any required storage library.
 2. Implement `IEntityStorage` and its archetype/chunk views. Follow the contract
    above for identity projection, stable arrays, swap removal and disposal.
 3. Add a test runner that shares the public behavior suites from `tests/ecs/` and
@@ -74,12 +74,19 @@ the dense chunk contract at this seam.
 4. Add the project to `Archy.slnx`, document how applications construct it, and run
    the README checks in Debug and Release.
 
-[`tests/api/`](../tests/api/Archy.Api.Tests.csproj) demonstrates this without Arch:
-its small test adapter uses 64-row managed chunks and runs the shared component,
-query, index, event, command, relationship, system, persistence and prefab suites.
-It also checks adapter disposal and failed restoration cleanup. It is a test
-fixture, not an additional supported runtime adapter.
+[`tests/api/`](../tests/api/Archy.Api.Tests.csproj) runs the shared component,
+query, index, event, command, relationship, system, persistence and prefab suites
+against the supported naive adapter without Arch. It also checks capacity
+preparation, stable chunk arrays, swap removal, default values on reuse, disposal
+and failed restoration cleanup. Performance budgets are specific to the Arch suite.
 
-[`ArchStorage`](../src/adapters/arch/ArchStorage.cs) implements the production
-adapter. Its existing checks cover native signature collisions, managed-payload
-cleanup, chunk growth/reuse, full unsigned generations and allocation budgets.
+[`NaiveStorage`](../src/adapters/naive/NaiveStorage.cs) is the minimal managed
+implementation. Each composition owns a list of 64-row chunks, each with an
+identity array and a dictionary of typed component arrays. Registration does not
+build extra metadata. Structural moves copy the retained values, and removal swaps
+in the final row. Retained chunks keep their backing arrays until disposal. This
+implementation is intended as the simplest supported core, not a performance target.
+
+[`ArchStorage`](../src/adapters/arch/ArchStorage.cs) uses the Arch package. Its
+checks also cover native signature collisions, managed-payload cleanup, chunk
+growth/reuse, full unsigned generations and allocation budgets.

@@ -1,7 +1,8 @@
 # Archy
 
 Archy is an experiment coded by AI agents, built on top of
-[Arch](https://github.com/genaray/Arch). It provides a standalone C# ECS API with
+[Arch](https://github.com/genaray/Arch) through its Arch adapter. It provides a
+standalone C# ECS API with
 explicit component mutations, generated indexes, relationships, deferred events
 and commands, systems, persistence and prefabs.
 
@@ -10,7 +11,8 @@ ownership, indexes, events and the remaining public behavior. It has no dependen
 on Arch. The `Archy.Adapters.Arch` adapter uses Arch 2.1.0 for entity storage,
 archetypes, chunks and structural changes. Native worlds stay private inside the
 adapter, which uses the NuGet package through its public APIs. See
-[storage and integration](src/ecs/IMPLEMENTATION.md) for the storage contract.
+[storage and integration](src/ecs/IMPLEMENTATION.md) for the storage contract. The `Archy.Adapters.Naive` adapter supplies a minimal
+managed implementation with no third-party dependencies.
 
 The runtime assembly and namespace are `Archy`; the generator assembly is
 `Archy.Generator`, with its generators in `Archy.Generators`.
@@ -21,8 +23,9 @@ The runtime assembly and namespace are `Archy`; the generator assembly is
 | --- | --- | --- |
 | [`Archy`](src/ecs/Archy.csproj) | Public ECS behavior and the `Archy.Storage` adapter contracts. | .NET only. |
 | [`Archy.Adapters.Arch`](src/adapters/arch/Archy.Adapters.Arch.csproj) | Arch storage implementation. | `Archy` and Arch 2.1.0. |
+| [`Archy.Adapters.Naive`](src/adapters/naive/Archy.Adapters.Naive.csproj) | Minimal managed storage implementation. | `Archy` only. |
 
-The adapter references the API layer. Applications choose an adapter when creating
+Each adapter references the API layer. Applications choose an adapter when creating
 a store; component libraries can depend on the API layer alone. See
 [adding an adapter](docs/adapters.md) for the contract and verification workflow.
 
@@ -42,7 +45,7 @@ dotnet run --no-build --project tests/ecs-generator -c Release
 ```
 
 The Arch adapter restores Arch 2.1.0; the generator restores Roslyn. The API-only
-checks use a test storage adapter and run without the Arch package.
+checks use the supported naive adapter and run without the Arch package.
 
 ## Consumer setup
 
@@ -56,6 +59,28 @@ that declares indexed or persistent components:
 <ProjectReference Include="path/to/archy/tools/ecs-generator/Archy.Generator.csproj"
                   OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 ```
+
+## Naive adapter
+
+To use the minimal managed storage, select this adapter project instead of the
+Arch adapter reference above:
+
+```xml
+<ProjectReference Include="path/to/archy/src/adapters/naive/Archy.Adapters.Naive.csproj" />
+```
+
+```csharp
+using Archy;
+using Archy.Adapters.Naive;
+
+using var store = new EntityStore(new NaiveStorage());
+```
+
+`NaiveStorage` uses dictionaries of typed arrays and fixed-size chunks. It favors
+a small implementation over throughput: structural moves copy retained values,
+deletions swap in the final row, and disposal clears retained arrays. All shared
+ECS behavior stays in the API layer. Store restoration uses
+`serializer.ReadStore(json, static () => new NaiveStorage())`.
 
 ## API overview
 
@@ -153,5 +178,5 @@ fresh storage; the restored store owns it and disposes it if loading fails.
 - [ECS contracts and original design record](docs/ecs-replacement-spec.md)
 - [C# conventions](docs/tools/csharp.md)
 - Runtime examples and Arch adapter checks: `tests/ecs/`
-- API checks without Arch: `tests/api/`
+- Shared API and naive adapter checks without Arch: `tests/api/`
 - Compiled generator consumer checks: `tests/ecs-generator/`

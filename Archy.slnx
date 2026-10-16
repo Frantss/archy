@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="src/ecs/Archy.csproj" />
   <Project Path="src/adapters/arch/Archy.Adapters.Arch.csproj" />
+  <Project Path="src/adapters/naive/Archy.Adapters.Naive.csproj" />
   <Project Path="tools/ecs-generator/Archy.Generator.csproj" />
   <Project Path="tests/ecs/Archy.Tests.csproj" />
   <Project Path="tests/api/Archy.Api.Tests.csproj" />

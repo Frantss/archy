@@ -1,12 +1,14 @@
 # Archy integration and storage
 
-The runtime is split into two projects targeting .NET 10:
+The runtime has an API project and two adapter projects targeting .NET 10:
 
 - `src/ecs/Archy.csproj` implements the `Archy` API and defines the adapter contract
   in `Archy.Storage`. It has no package or adapter dependencies.
 - `src/adapters/arch/Archy.Adapters.Arch.csproj` implements `ArchStorage` in
   `Archy.Adapters.Arch`, referencing the API layer and the
   [Arch 2.1.0 NuGet package](https://www.nuget.org/packages/Arch/2.1.0).
+- `src/adapters/naive/Archy.Adapters.Naive.csproj` implements `NaiveStorage` in
+  `Archy.Adapters.Naive`, referencing only the API layer.
 
 The generator remains a separate .NET Standard 2.0 analyzer. Runtime, adapters,
 generator and checks have no gameplay or Godot dependency.
@@ -28,7 +30,8 @@ analyzer must run in each project declaring indexed or persistent components.
 Declare indexed components as partial structs and mark the key member with
 `[Indexed]`; generated module initialization registers their metadata.
 
-Create stores explicitly with `new EntityStore(new ArchStorage())`. A store owns
+Create stores explicitly with `new EntityStore(new ArchStorage())` or
+`new EntityStore(new NaiveStorage())`, referencing the selected adapter. A store owns
 its adapter, entities, deferred events and command buffers. Dispose owned stores
 and subscriptions. Apply component writes through mutation methods; query values
 are owned copies. Dispatch events explicitly or through system checkpoints.
@@ -70,18 +73,37 @@ chunk payloads on disposal.
 There is no vendored dependency, private Arch access or reflection into Arch
 internals. All configurations use the same NuGet package.
 
+## Naive adapter
+
+`NaiveStorage` implements the same contract with managed dictionaries and 64-row
+chunks of typed arrays. Registration needs no metadata; arrays are created from
+the requested composition types. Structural moves copy retained columns and
+remove the source row by swapping in the final row. Chunks remain allocated until
+disposal so escaped array bindings stay stable across growth and reuse. Vacated
+identities and values are cleared immediately, and disposal clears retained arrays.
+Disposal is idempotent; subsequent calls to adapter storage methods throw
+`ObjectDisposedException`.
+
+The implementation prioritizes a small core over throughput and has no dependency
+on Arch. It does not duplicate the API layer's validation, indexes or events.
+Select it during restoration with `static () => new NaiveStorage()` as the storage
+factory.
+
 ## Verification
 
 Run the [README checks](../../README.md#setup-and-verification) in Debug and Release.
 The Arch suite includes native signature collisions, generation saturation,
 reservation/reuse, managed-payload cleanup and allocation bounds alongside the
 public ECS contracts. `tests/api/` runs the shared public behavior suites against
-a test adapter without referencing Arch. Generator checks compile and run
+the supported naive adapter without referencing Arch. Its storage-contract checks
+cover capacity preparation, stable arrays, swap removal, default values on reuse
+and disposal. Generator checks compile and run
 consumers of indexed and persistent components.
 
 ```sh
 dotnet build src/ecs/Archy.csproj -c ExportRelease
 dotnet build src/adapters/arch/Archy.Adapters.Arch.csproj -c ExportRelease
+dotnet build src/adapters/naive/Archy.Adapters.Naive.csproj -c ExportRelease
 ```
 
 See [adding an adapter](../../docs/adapters.md) for the storage contract. Godot
