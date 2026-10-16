@@ -4,7 +4,7 @@ namespace Archy.Tests;
 
 internal static class ReadChecks {
   public static void Run() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     entity.Add(new QueryPosition(7));
     entity.Add(new EventBag([8]));

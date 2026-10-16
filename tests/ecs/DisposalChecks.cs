@@ -19,7 +19,7 @@ internal static class DisposalChecks {
 
   [MethodImpl(MethodImplOptions.NoInlining)]
   private static (Entity Entity, WeakReference Payload, object[] Retained) DisposeWithLivePayload() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     var token = new JournalToken();
     entity.Add(new JournalPayload(token));

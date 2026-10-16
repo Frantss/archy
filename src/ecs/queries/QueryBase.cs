@@ -70,7 +70,7 @@ public abstract class QueryBase<TSelf> where TSelf : QueryBase<TSelf> {
 
     try {
       if (this._storeVersion != this._store.ArchetypeVersion) {
-        this._plan = this._store.MatchArch(this._requiredTypes, this.Filter);
+        this._plan = this._store.MatchStorage(this._requiredTypes, this.Filter);
         this._storeVersion = this._store.ArchetypeVersion;
         this._planOrder = null;
       }

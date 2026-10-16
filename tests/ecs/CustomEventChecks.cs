@@ -4,11 +4,11 @@ namespace Archy.Tests;
 
 internal static class CustomEventChecks {
   public static void Run() {
-    using var channels = new EntityStore();
-    using var isolated = new EntityStore();
+    using var channels = StoreFactory.Create();
+    using var isolated = StoreFactory.Create();
     GrowChannels<int>(channels, isolated, 40);
-    using var store = new EntityStore();
-    using var foreign = new EntityStore();
+    using var store = StoreFactory.Create();
+    using var foreign = StoreFactory.Create();
     var entity = store.Create();
     var other = foreign.Create();
     entity.Add(new QueryPosition(1));

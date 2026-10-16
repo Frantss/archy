@@ -5,7 +5,7 @@ namespace Archy.Tests;
 internal static class ReservationChecks {
   public static void Run() {
     InterleavedOwners();
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     using var commands = store.CreateCommandBuffer();
     using var otherBuffer = store.CreateCommandBuffer();
     var root = store.Create();
@@ -55,7 +55,7 @@ internal static class ReservationChecks {
     Check.That(commands.Count == 0, "Creation streams are consumed.");
   }
   private static void InterleavedOwners() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     using var first = store.CreateCommandBuffer();
     using var second = store.CreateCommandBuffer();
     var kept = new List<Entity>();

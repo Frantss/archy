@@ -10,7 +10,7 @@ internal static class CapacityChecks {
   }
 
   private static void BufferedPopulation() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     using var commands = store.CreateCommandBuffer();
     var population = new List<Entity>();
     var created = new List<Entity>();
@@ -62,7 +62,7 @@ internal static class CapacityChecks {
       tags = i % 3 == 0 ? visible : []
     });
     var json = JsonSerializer.Serialize(new { formatVersion = 1, entities = nodes });
-    using var store = serializer.ReadStore(json);
+    using var store = serializer.ReadStore(json, StoreFactory.CreateStorage);
     Check.That(store.Count == 6000 && store.Query<SavedIdentity>().Count == 3000,
       "Prepared store loads count separate final compositions correctly.");
     Check.That(store.Query().AllTags(Tags.Get<SavedVisible>()).Count == 2000,

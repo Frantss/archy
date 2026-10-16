@@ -12,7 +12,7 @@ internal static class ChunkWriteChecks {
   }
 
   private static void WritesAcrossChunks() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entities = new Entity[5000];
 
     for (var i = 0; i < entities.Length; i++) {
@@ -66,7 +66,7 @@ internal static class ChunkWriteChecks {
   }
 
   private static void Interleaved(bool reverse) {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Create();
     first.Add(new QueryPosition(1));
     var second = store.Create();
@@ -107,7 +107,7 @@ internal static class ChunkWriteChecks {
   }
 
   private static void CallbackDisposesLease() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     entity.Add(new QueryPosition(1));
     using var cursor = store.Query<QueryPosition>().Chunks.GetEnumerator();
@@ -137,7 +137,7 @@ internal static class ChunkWriteChecks {
   }
 
   private static void ProjectionArities() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     entity.Add(new QueryPosition(1));
     entity.Add(new QueryVelocity(2));

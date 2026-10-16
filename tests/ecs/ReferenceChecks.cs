@@ -4,8 +4,8 @@ namespace Archy.Tests;
 
 internal static class ReferenceChecks {
   public static void Run() {
-    using var store = new EntityStore();
-    using var foreign = new EntityStore();
+    using var store = StoreFactory.Create();
+    using var foreign = StoreFactory.Create();
     var target = store.Create();
     var source = store.Create();
     var blocker = store.Create();

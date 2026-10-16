@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Arch.Core;
 using Archy;
+using Archy.Storage;
 using Store = Archy.EntityStore;
 
 namespace Archy.Tests;
@@ -11,7 +12,7 @@ internal static class BackendChecks {
     SignatureCollisions();
     ChunkPopulationChanges();
     NativeIdentityChecks.Run();
-    using var store = new Store();
+    using var store = StoreFactory.Create();
     var (payload, retained) = RemovePayload(store);
     GC.Collect();
     GC.WaitForPendingFinalizers();
@@ -22,7 +23,7 @@ internal static class BackendChecks {
   }
 
   private static void ChunkPopulationChanges() {
-    using var store = new Store();
+    using var store = StoreFactory.Create();
     var entities = new List<Archy.Entity>();
     var present = new HashSet<Archy.Entity>();
     var query = store.Query<QueryPosition>().FreezeFilter();
@@ -84,7 +85,7 @@ internal static class BackendChecks {
   }
 
   private static void SignatureCollisions() {
-    var identity = typeof(Store).Assembly.GetType("Archy.NativeIdentity")!;
+    var identity = typeof(StorageIdentity);
     ComponentType[] shared = [Component.GetComponentType(identity), Component<QueryPosition>.ComponentType,
       Component<JournalPayload>.ComponentType, Component<IndexedGroup>.ComponentType];
     Type[] arguments = [typeof(byte), typeof(short), typeof(int), typeof(long), typeof(float), typeof(double),
@@ -127,7 +128,7 @@ internal static class BackendChecks {
     }
 
     Check.That(second != 0, "Collision fixture finds distinct native signatures with the same hash.");
-    using var store = new Store();
+    using var store = StoreFactory.Create();
     var left = store.Create();
     var right = store.Create();
     var token = new JournalToken();

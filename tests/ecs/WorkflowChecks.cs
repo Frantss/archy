@@ -13,7 +13,7 @@ internal static class WorkflowChecks {
     actor.Draft.AddTag<WorkflowActive>();
     item.Draft.Add(new WorkflowOwner(actor.Reference));
     var template = serializer.ReadPrefabGraph(serializer.WritePrefab(builder.Build()));
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Instantiate(template);
     var second = store.Instantiate(template);
     var trace = new List<string>();
@@ -31,7 +31,7 @@ internal static class WorkflowChecks {
     Check.That(trace.Count == 3 && trace.IndexOf($"global:{first["actor"].Id}") < trace.IndexOf($"local:{first["actor"].Id}"), "Combined workflow routes store subscriptions before entity subscriptions.");
     Check.That(store.Query<WorkflowPose>().HasValue<WorkflowPose, (int, int)>((0, 0)).Count == 2, "Private computed indexes remain consistent through system commands.");
     Check.That(store.ComponentIndex<WorkflowOwner, Entity>()[first["actor"]].Count == 2, "Buffered creation links a new entity through ordinary indexed components.");
-    using var restored = serializer.ReadStore(serializer.WriteStore(store));
+    using var restored = serializer.ReadStore(serializer.WriteStore(store), StoreFactory.CreateStorage);
     Check.That(restored.Count == 5 && restored.Query<WorkflowPose>().AllTags(Tags.Get<WorkflowActive>()).Count == 2, "The composed workflow restores generated values, tags and indexes.");
 
     foreach (var linked in restored.Query<WorkflowOwner>().Entities) {

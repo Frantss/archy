@@ -5,7 +5,7 @@ namespace Archy.Tests;
 
 internal static class PrefabGraphChecks {
   public static void Run() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var builder = new PrefabGraphBuilder();
     var first = builder.Create("first");
     var second = builder.Create("second");
@@ -41,7 +41,7 @@ internal static class PrefabGraphChecks {
     Check.That(store.Count == count && store.ComponentIndex<SavedIdentity, int>()[10].Count == 0, "Within-graph unique conflicts publish no nodes or index memberships.");
     instance["first"].Delete();
     Check.That(!instance["second"].Has<SavedOwner>() && other["second"].Has<SavedOwner>(), "Deletion cleans only the affected instance's references.");
-    using var foreign = new EntityStore();
+    using var foreign = StoreFactory.Create();
     Check.Throws<MutationException>(() => store.Instantiate(graph, new Dictionary<string, Entity> { ["owner"] = foreign.Create() }));
     var unbound = new PrefabGraphBuilder();
     unbound.Create("node").Draft.Add(new SavedOwner(external));

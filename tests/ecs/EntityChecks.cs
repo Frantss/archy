@@ -4,7 +4,7 @@ namespace Archy.Tests;
 
 internal static class EntityChecks {
   private static void MetadataGrowth() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     using var commands = store.CreateCommandBuffer();
     var entity = store.Create();
     entity.Add(new QueryPosition(1));
@@ -33,8 +33,8 @@ internal static class EntityChecks {
 
   public static void Run() {
     MetadataGrowth();
-    using var store = new EntityStore();
-    using var other = new EntityStore();
+    using var store = StoreFactory.Create();
+    using var other = StoreFactory.Create();
     var entity = store.Create();
     var foreign = other.Create();
     var copy = entity;

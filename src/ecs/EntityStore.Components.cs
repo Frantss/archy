@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Archy.Storage;
 
 namespace Archy;
 
@@ -7,7 +8,10 @@ public sealed partial class EntityStore {
   private readonly Archetype _empty = new([], []);
   private bool _preparing;
 
-  public EntityStore() {
+  public EntityStore(IEntityStorage storage) {
+    ArgumentNullException.ThrowIfNull(storage);
+
+    this._storage = storage;
     this._empty.Initialize(this, this._storage);
     this._archetypes.Add("|", this._empty);
   }

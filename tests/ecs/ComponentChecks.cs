@@ -5,7 +5,7 @@ namespace Archy.Tests;
 internal static class ComponentChecks {
   public static void Run() {
     RecycledChunks();
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
 
     Check.That(!entity.Has<Position>() && !entity.TryGet<Position>(out _), "Missing components are observable.");
@@ -79,7 +79,7 @@ internal static class ComponentChecks {
   }
 
   private static void RecycledChunks() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var query = store.Query<Position>();
 
     for (var cycle = 0; cycle < 3; cycle++) {

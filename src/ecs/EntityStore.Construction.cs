@@ -55,7 +55,7 @@ public sealed partial class EntityStore {
         var capacities = new Dictionary<Archetype, int>();
 
         foreach (var node in prepared) capacities[node.Archetype] = capacities.GetValueOrDefault(node.Archetype) + 1;
-        foreach (var (archetype, additional) in capacities) this.PrepareArchCapacity(archetype, additional);
+        foreach (var (archetype, additional) in capacities) this.PrepareStorageCapacity(archetype, additional);
       }
 
       foreach (var node in prepared) {

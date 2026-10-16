@@ -7,7 +7,7 @@ namespace Archy.Tests;
 internal static class ChunkChecks {
   public static void Run() {
     foreach (var count in new[] { 15, 16, 31, 32, 63, 64, 123, 124, 125, 255, 256, 511, 512, 1023, 1024, 5000 }) {
-      using var store = new EntityStore();
+      using var store = StoreFactory.Create();
       var entities = new Entity[count];
 
       for (var pass = 0; pass < 2; pass++) {
@@ -36,7 +36,7 @@ internal static class ChunkChecks {
       }
     }
 
-    using var retained = new EntityStore();
+    using var retained = StoreFactory.Create();
     var payload = FillAndClear(retained);
     GC.Collect();
     GC.WaitForPendingFinalizers();

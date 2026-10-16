@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using Archy.Storage;
 
 namespace Archy;
 
@@ -57,7 +58,7 @@ internal abstract class TypeDescriptor {
   public virtual PendingEvent? RemovalEvent(StoreEvents events, Entity entity) => null;
 
   public virtual ComponentColumn CreateColumn() => throw new InvalidOperationException("Tags have no value column.");
-  public abstract void ChangeNative(Arch.Core.World world, Arch.Core.Entity entity, bool add);
+  public abstract void RegisterStorage(IEntityStorage storage);
 }
 
 internal sealed class ComponentDescriptor<T> : TypeDescriptor where T : struct, IComponent {
@@ -94,10 +95,7 @@ internal sealed class ComponentDescriptor<T> : TypeDescriptor where T : struct, 
   public override PendingEvent? RemovalEvent(StoreEvents events, Entity entity) => events.Removed<T>(entity);
 
   public override ComponentColumn CreateColumn() => new ComponentColumn<T>();
-  public override void ChangeNative(Arch.Core.World world, Arch.Core.Entity entity, bool add) {
-    if (add) world.Add<T>(entity);
-    else world.Remove<T>(entity);
-  }
+  public override void RegisterStorage(IEntityStorage storage) => storage.Register<T>();
 }
 
 internal static class ValueSafety {
@@ -131,10 +129,7 @@ internal static class ValueSafety {
 
 internal sealed class TagDescriptor<T> : TypeDescriptor where T : struct, ITag {
   public TagDescriptor(int id) : base(id, typeof(T), true) {}
-  public override void ChangeNative(Arch.Core.World world, Arch.Core.Entity entity, bool add) {
-    if (add) world.Add<T>(entity);
-    else world.Remove<T>(entity);
-  }
+  public override void RegisterStorage(IEntityStorage storage) => storage.Register<T>();
   public override PendingEvent? AdditionEvent(StoreEvents events, Entity entity) =>
     events.AddedTag<T>(entity);
   public override PendingEvent? RemovalEvent(StoreEvents events, Entity entity) =>

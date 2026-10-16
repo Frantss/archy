@@ -5,7 +5,7 @@ namespace Archy.Tests;
 
 internal static class EventChecks {
   private static void ImmutableUpdates() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     entity.Add(new QueryPosition(1));
     var history = new List<(int Old, int Next)>();
@@ -35,7 +35,7 @@ internal static class EventChecks {
     ReleasedRoutes();
     ImmutableSubscriptions();
     ReusedDeliveries();
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var log = new List<string>();
     var sequences = new List<long>();
     using var created = store.Events.Subscribe<EntityCreated>(item => {
@@ -108,7 +108,7 @@ internal static class EventChecks {
   }
 
   private static void ReleasedRoutes() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var payload = PopulateAndCancelRoute(store);
     GC.Collect();
     GC.WaitForPendingFinalizers();
@@ -129,7 +129,7 @@ internal static class EventChecks {
   }
 
   private static void ChangingRoutes() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Create();
     var second = store.Create();
     first.Add(new QueryPosition(0));
@@ -158,7 +158,7 @@ internal static class EventChecks {
   }
 
   private static void ImmutableSubscriptions() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     entity.Add(new QueryPosition(0));
     var global = new List<int>();
@@ -185,7 +185,7 @@ internal static class EventChecks {
   }
 
   private static void ReusedDeliveries() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     entity.Add(new EventBag([1]));
     var retained = new List<ComponentUpdated<EventBag>>();

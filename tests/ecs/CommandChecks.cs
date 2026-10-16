@@ -4,7 +4,7 @@ namespace Archy.Tests;
 
 internal static class CommandChecks {
   public static void Run() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     using var commands = store.CreateCommandBuffer();
     var entity = store.Create();
     entity.Add(new QueryPosition(1));
@@ -46,7 +46,7 @@ internal static class CommandChecks {
     input[0] = 20;
     commands.Playback();
     Check.That(entity.Get<EventBag>().Values[0] == 1, "Recording owns component payloads.");
-    using var foreign = new EntityStore();
+    using var foreign = StoreFactory.Create();
     var other = foreign.Create();
     var foreignTicket = commands.TryUpsert(other, new QueryPosition(1));
     Check.That(!commands.Playback().Get(foreignTicket) && !other.Has<QueryPosition>(), "Commands validate full handles against their bound store.");

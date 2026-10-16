@@ -5,8 +5,8 @@ namespace Archy.Tests;
 internal static class BoundWriteChecks {
   public static void Run() {
     DormantWrites();
-    using var store = new EntityStore();
-    using var otherStore = new EntityStore();
+    using var store = StoreFactory.Create();
+    using var otherStore = StoreFactory.Create();
     var first = store.Create();
     first.Add(new QueryPosition(1));
     first.Add(new QueryVelocity(2));
@@ -75,7 +75,7 @@ internal static class BoundWriteChecks {
   }
 
   private static void DormantWrites() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entities = new Entity[5000];
     var expected = Enumerable.Range(0, entities.Length).ToArray();
 

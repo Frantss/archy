@@ -5,7 +5,7 @@ namespace Archy.Tests;
 
 internal static class GraphSerializationChecks {
   public static void Run() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Create();
     var second = store.Create();
     var self = store.Create();
@@ -17,7 +17,7 @@ internal static class GraphSerializationChecks {
     self.Add(new SavedOwner(self));
     var serializer = new StoreSerializer(typeof(SavedIdentity).Assembly);
     var json = serializer.WriteStore(store);
-    using var restored = serializer.ReadStore(json);
+    using var restored = serializer.ReadStore(json, StoreFactory.CreateStorage);
     var ids = restored.ComponentIndex<SavedIdentity, int>();
     var restoredFirst = ids[1].Single();
     var restoredSecond = ids[2].Single();
@@ -32,8 +32,18 @@ internal static class GraphSerializationChecks {
     restored.Events.Dispatch();
     Check.That(!restoredSecond.Has<SavedOwner>() && log.SequenceEqual(["source", "target"]), "Restored relationship deletion policies and cleanup events retain their behavior.");
     Check.That(restoredSelf.TryDelete(), "Restored self references do not restrict their own removal.");
-    Check.Throws<JsonException>(() => serializer.ReadStore(json.Replace("\"target\":\"2\"", "\"target\":\"missing\"", StringComparison.Ordinal)));
-    Check.Throws<MutationException>(() => serializer.ReadStore(json.Replace("\"value\":2", "\"value\":1", StringComparison.Ordinal)));
+    Check.Throws<JsonException>(
+      () => serializer.ReadStore(
+        json.Replace("\"target\":\"2\"", "\"target\":\"missing\"", StringComparison.Ordinal),
+        StoreFactory.CreateStorage
+      )
+    );
+    Check.Throws<MutationException>(
+      () => serializer.ReadStore(
+        json.Replace("\"value\":2", "\"value\":1", StringComparison.Ordinal),
+        StoreFactory.CreateStorage
+      )
+    );
     Check.That(store.Count == 3 && first.Get<SavedOwner>().Target == second, "Failed graph validation leaves the original graph untouched.");
     Check.That(serializer.WriteStore(store) == json, "Runtime handles do not affect document-local graph semantics.");
   }

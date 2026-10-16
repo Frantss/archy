@@ -7,7 +7,7 @@ internal static class IndexChecks {
     PrimitiveIndexes();
     SparseAndRecycledEntries();
     GuardedComparers();
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Create();
     var second = store.Create();
     first.Add(new IndexedIdentity(1));
@@ -38,7 +38,7 @@ internal static class IndexChecks {
     first.Add(new CheckedKey(1));
     Check.Throws<InvalidOperationException>(() => first.TryUpsert(new CheckedKey(-1)));
     Check.That(first.Get<CheckedKey>().Value == 1 && store.ComponentIndex<CheckedKey, int>()[1].Single() == first, "Computed-key exceptions preserve component data and index membership.");
-    var nullStore = new EntityStore();
+    var nullStore = StoreFactory.Create();
     var nullView = nullStore.ComponentIndex<IndexedName, string>()[null!];
     Check.That(nullView.Count == 0, "Null index keys produce empty views.");
     nullStore.Dispose();
@@ -61,7 +61,7 @@ internal static class IndexChecks {
   }
 
   private static void PrimitiveIndexes() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Create();
     var second = store.Create();
     first.Add(new PrimitiveLong(0));
@@ -109,7 +109,7 @@ internal static class IndexChecks {
   }
 
   private static void GuardedComparers() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     GuardedIndexComparer.Store = store;
 
     try {
@@ -129,8 +129,8 @@ internal static class IndexChecks {
   }
 
   private static void SparseAndRecycledEntries() {
-    using var store = new EntityStore();
-    using var foreign = new EntityStore();
+    using var store = StoreFactory.Create();
+    using var foreign = StoreFactory.Create();
     var entities = Enumerable.Range(0, 8193).Select(_ => store.Create()).ToArray();
     var index = store.ComponentIndex<IndexedGroup, int>();
     var selected = entities.Where((_, i) => i % 1025 == 0).ToArray();

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Archy.Adapters.Arch</RootNamespace>
+    <Configurations>Debug;Release;ExportDebug;ExportRelease</Configurations>
+    <Optimize Condition="'$(Configuration)' == 'ExportRelease'">true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../ecs/Archy.csproj" />
+    <PackageReference Include="Arch" Version="2.1.0" />
+  </ItemGroup>
+</Project>

@@ -8,7 +8,7 @@ internal static class IndexedQueryChecks {
     ReusedIndexStorage();
     SparseTraversal();
     RetainedBuckets();
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var all = new List<Entity>();
 
     for (var i = 0; i < 60; i++) {
@@ -61,7 +61,7 @@ internal static class IndexedQueryChecks {
   }
 
   private static void CachedSnapshots() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Create();
     var second = store.Create();
     first.Add(new IndexedGroup { Value = 7 });
@@ -84,7 +84,7 @@ internal static class IndexedQueryChecks {
   }
 
   private static void ReusedIndexStorage() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var index = store.ComponentIndex<IndexedGroup, int>();
     var entity = store.Create();
     entity.Add(new IndexedGroup { Value = 0 });
@@ -115,7 +115,7 @@ internal static class IndexedQueryChecks {
   }
 
   private static void SparseTraversal() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var all = new List<Entity>();
 
     for (var i = 0; i < 5000; i++) {
@@ -163,7 +163,7 @@ internal static class IndexedQueryChecks {
   }
 
   private static void RetainedBuckets() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var index = store.ComponentIndex<IndexedGroup, int>();
     var missing = index[7];
     var first = store.Create();

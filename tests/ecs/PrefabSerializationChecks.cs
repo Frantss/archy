@@ -19,7 +19,7 @@ internal static class PrefabSerializationChecks {
       && !json.Contains("generation", StringComparison.OrdinalIgnoreCase), "Prefab files use local node and external binding IDs without runtime handles.");
     var graph = serializer.ReadPrefabGraph(json);
     Check.That(graph.RequiredBindings.SequenceEqual(["world"]) && graph.NodeIds.SequenceEqual(["root", "child"]), "Prefab files retain node identities and explicit binding requirements.");
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var external = store.Create();
     var bindings = new Dictionary<string, Entity> { ["world"] = external };
     var creations = 0;
@@ -44,7 +44,7 @@ internal static class PrefabSerializationChecks {
     Check.Throws<JsonException>(() => serializer.ReadPrefab(old));
     serializer.RegisterMigration<SavedVersioned>(1, data => JsonSerializer.SerializeToElement(new { value = data.GetProperty("old").GetInt32() + 1 }));
     var migrated = serializer.ReadPrefab(old);
-    using var other = new EntityStore();
+    using var other = StoreFactory.Create();
     Check.That(other.Instantiate(migrated).Get<SavedVersioned>().Value == 6, "Prefab files reuse registered component migrations.");
     using var stream = new MemoryStream();
     serializer.WritePrefab(graph, stream);

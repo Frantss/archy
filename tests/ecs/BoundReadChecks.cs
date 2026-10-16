@@ -4,8 +4,8 @@ namespace Archy.Tests;
 
 internal static class BoundReadChecks {
   public static void Run() {
-    using var store = new EntityStore();
-    using var foreignStore = new EntityStore();
+    using var store = StoreFactory.Create();
+    using var foreignStore = StoreFactory.Create();
     var foreign = foreignStore.Create();
     foreign.Add(new QueryPosition(9000));
     var stale = store.Create();

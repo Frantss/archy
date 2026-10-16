@@ -6,7 +6,7 @@ namespace Archy.Tests;
 internal static class SerializationChecks {
   public static void Run() {
     var serializer = new StoreSerializer(typeof(SavedIdentity).Assembly);
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     entity.Add(new SavedIdentity(1));
     var json = serializer.WriteComponent(new SavedIdentity(2));

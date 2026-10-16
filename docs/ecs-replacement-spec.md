@@ -1,8 +1,8 @@
 # Standalone ECS replacement with generated indexes and scoped events
 
-Earlier storage decisions describe the original implementation; the current Arch
-backend is documented in [storage and integration](../src/ecs/IMPLEMENTATION.md).
-Game-specific steps do not apply to this standalone project.
+The current API layer and Arch adapter are documented in
+[storage and integration](../src/ecs/IMPLEMENTATION.md). Adapter requirements are
+defined in [adding an adapter](adapters.md).
 
 ## Problem Statement
 
@@ -106,9 +106,9 @@ the existing solution without migrating the running game as part of this feature
 
 ## Implementation Decisions
 
-- Build a nested standalone runtime library named Archy, a separate Archy.Generator analyzer, and plain .NET runtime/generator check projects in the existing solution. The working dependency direction is game to gameplay logic to ECS. Scaffolding must prevent the root Godot project from compiling nested library sources a second time. Add analyzer references to actual component assemblies explicitly.
-- Target the runtime at the repository's current .NET 10 platform and the Roslyn generator at .NET Standard 2.0, following the existing generator project pattern. Keep Godot, gameplay types, Friflo, Arch, and Roslyn out of runtime dependencies. Application identity types remain ordinary component data.
-- Use managed chunked archetypes with component/tag masks, typed component columns, cached structural transitions, and swap removal. Hide layout, allocator, and archetype details behind the public interface. Prefer this over sparse pools as the initial hypothesis for repeated stable-composition scans; performance remains to be measured.
+- Build the engine-independent Archy API layer and a separate Archy.Adapters.Arch storage adapter. Only the adapter references Arch. Keep indexes, events, relationships, commands, queries, systems, serialization and prefabs in the API layer. Applications supply fresh storage explicitly when constructing or restoring stores. Keep the source generator separate and reference it from component assemblies.
+- Target the runtime and adapter at .NET 10 and the Roslyn generator at .NET Standard 2.0. Keep game-engine, gameplay, Arch and Roslyn dependencies out of the API layer. The Arch adapter consumes Arch 2.1.0 through NuGet. Application identity types remain ordinary component data.
+- Put storage behind IEntityStorage, IStorageArchetype and IStorageChunk. Adapters own dense chunked component arrays, structural transitions, swap removal and vacated-row cleanup. The API layer owns composition masks, cached query plans and public slot locations. Keep native types private to each adapter.
 - Use a single writer. All public accesses validate store identity and entity generation. Handles survive structural moves; default, reserved, deleted, and disposed-store handles are not alive. Retire slots instead of wrapping generations. Runtime handles are distinct from persisted application identity components.
 - Keep component and tag marker interfaces. Components use value-based reads; tags are presence-only and allocate no value column. Do not expose mutable component references or writable column spans.
 - Add and update are strict: add requires absence; update requires presence. Upsert adds when absent and updates when present. Remove requires presence. Provide try variations returning false with no changes on ordinary failures. Try-upsert returns true for either successful branch; ordinary upsert returns no branch indicator. Existing equal-value updates still count as explicit writes.
@@ -157,7 +157,7 @@ the existing solution without migrating the running game as part of this feature
 - Cover command FIFO behavior, reserved handles, reservation cancellation, buffered try tickets, branch evaluation at playback, failures preserving only the completed prefix, canceled unexecuted tickets, stream consumption, and custom emission relative to create/delete/failure.
 - Cover explicit system order, tick/context delivery, command/event checkpoints, and handler-command visibility through the public pipeline rather than private scheduling details.
 - Cover component/store round trips, persistence versions/migrations, duplicate keys, unique-key conflicts, reference cycles, invalid-load isolation, index reconstruction, prefab variants, graph remapping, external bindings, and template/instance independence.
-- Run the repository's required build, Godot import, and headless startup checks when project wiring or runtime code changes. Keep current gameplay checks as regression coverage; this spec does not migrate gameplay to the new library.
+- Run the solution build and all README runtime, API-only and generator checks in Debug and Release. The API-only suite shares behavior checks with the Arch suite and uses a test adapter without Arch dependencies. Run export-configuration builds for runtime/adapter wiring changes. No rendered or engine startup checks apply.
 
 ## Out of Scope
 
@@ -174,12 +174,7 @@ the existing solution without migrating the running game as part of this feature
 
 ## Further Notes
 
-The replacement runtime and source generator are implemented. The single runtime
-project is `src/ecs/Archy.csproj`, using Arch's NuGet package and public storage
-API behind the public `Archy` API. See [integration and storage](../src/ecs/IMPLEMENTATION.md) for project
-references, ownership boundaries, dependency provenance and checks. Existing game
-logic continues to use Friflo; gameplay migration remains a separate task.
-
-The user confirmed the public ECS and compiler testing seams and selected a local
-file as the specification's destination. This repository document is the final
-deliverable; issue-tracker setup, publication, and triage labels are not required.
+The runtime API layer and source generator are implemented. The Arch adapter is
+in `src/adapters/arch/Archy.Adapters.Arch.csproj` and depends on the API layer in
+`src/ecs/Archy.csproj`. Additional adapters implement the storage contracts without
+changing the public entity, query, mutation, event or persistence behavior.

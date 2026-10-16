@@ -16,7 +16,7 @@ internal static class NativeIdentityChecks {
     ordinary.Destroy(ordinaryEntity);
     Check.That(!ordinary.IsAlive(ordinaryEntity), "Destroying an independent native entity preserves its generation contract.");
 
-    using var store = new Store();
+    using var store = StoreFactory.Create();
     using var commands = store.CreateCommandBuffer();
     var entities = new List<Entity>();
     var expected = new Dictionary<Entity, int?>();
@@ -85,7 +85,7 @@ internal static class NativeIdentityChecks {
   }
 
   private static void GenerationBits() {
-    using var store = new Store();
+    using var store = StoreFactory.Create();
     var stale = store.Create();
     stale.Delete();
     const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;

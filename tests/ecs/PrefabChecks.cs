@@ -4,8 +4,8 @@ namespace Archy.Tests;
 
 internal static class PrefabChecks {
   public static void Run() {
-    using var store = new EntityStore();
-    using var other = new EntityStore();
+    using var store = StoreFactory.Create();
+    using var other = StoreFactory.Create();
     var draft = new PrefabBuilder();
     Check.That(!draft.TryUpdate(new QueryPosition(1)), "Prefab strict update requires an existing component.");
     draft.Add(new QueryPosition(1));
@@ -48,7 +48,7 @@ internal static class PrefabChecks {
     Check.That(store.Count == count && log.Count == observed, "Unique conflicts publish no partial instance or events.");
     identityDraft.Upsert(new SavedIdentity(6));
     Check.That(store.Instantiate(identityDraft.Build()).Get<SavedIdentity>().Value == 6, "Per-instance identity overrides avoid unique template collisions.");
-    using var isolated = new EntityStore();
+    using var isolated = StoreFactory.Create();
     var copies = new PrefabBuilder();
     copies.Add(new FragileLink(default));
     var unsafePrefab = copies.Build();

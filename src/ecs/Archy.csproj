@@ -5,7 +5,4 @@
     <Configurations>Debug;Release;ExportDebug;ExportRelease</Configurations>
     <Optimize Condition="'$(Configuration)' == 'ExportRelease'">true</Optimize>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Arch" Version="2.1.0" />
-  </ItemGroup>
 </Project>

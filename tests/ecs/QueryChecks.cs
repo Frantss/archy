@@ -6,7 +6,7 @@ internal static class QueryChecks {
   public static void Run() {
     OwnedColumns();
     TraversalLifetime();
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var all = new List<Entity>();
 
     for (var i = 0; i < 600; i++) {
@@ -73,7 +73,7 @@ internal static class QueryChecks {
   }
 
   private static void TraversalLifetime() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Create();
     first.Add(new QueryPosition(1));
     var second = store.Create();
@@ -101,7 +101,7 @@ internal static class QueryChecks {
   }
 
   private static void OwnedColumns() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entities = new List<Entity>();
 
     for (var i = 0; i < 300; i++) {

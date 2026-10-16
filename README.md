@@ -5,15 +5,26 @@ Archy is an experiment coded by AI agents, built on top of
 explicit component mutations, generated indexes, relationships, deferred events
 and commands, systems, persistence and prefabs.
 
-Arch 2.1.0 supplies entity storage, archetypes, chunks and structural changes.
-Archy adds public entity handles with generation checks, owned component values,
-index maintenance and event capture around those storage operations. The Arch
-world stays private behind the `Archy` API; the runtime uses the NuGet package
-through its public APIs. See [storage and integration](src/ecs/IMPLEMENTATION.md)
-for the boundary between the two libraries.
+The `Archy` API layer owns entity handles with generation checks, component value
+ownership, indexes, events and the remaining public behavior. It has no dependency
+on Arch. The `Archy.Adapters.Arch` adapter uses Arch 2.1.0 for entity storage,
+archetypes, chunks and structural changes. Native worlds stay private inside the
+adapter, which uses the NuGet package through its public APIs. See
+[storage and integration](src/ecs/IMPLEMENTATION.md) for the storage contract.
 
 The runtime assembly and namespace are `Archy`; the generator assembly is
 `Archy.Generator`, with its generators in `Archy.Generators`.
+
+## Runtime projects
+
+| Project | Responsibility | Dependencies |
+| --- | --- | --- |
+| [`Archy`](src/ecs/Archy.csproj) | Public ECS behavior and the `Archy.Storage` adapter contracts. | .NET only. |
+| [`Archy.Adapters.Arch`](src/adapters/arch/Archy.Adapters.Arch.csproj) | Arch storage implementation. | `Archy` and Arch 2.1.0. |
+
+The adapter references the API layer. Applications choose an adapter when creating
+a store; component libraries can depend on the API layer alone. See
+[adding an adapter](docs/adapters.md) for the contract and verification workflow.
 
 ## Setup and verification
 
@@ -22,22 +33,26 @@ Install the .NET 10 SDK selected by `global.json`, then run from this directory:
 ```sh
 dotnet build Archy.slnx
 dotnet run --no-build --project tests/ecs
+dotnet run --no-build --project tests/api
 dotnet run --no-build --project tests/ecs-generator
 dotnet build Archy.slnx -c Release
 dotnet run --no-build --project tests/ecs -c Release
+dotnet run --no-build --project tests/api -c Release
 dotnet run --no-build --project tests/ecs-generator -c Release
 ```
 
-NuGet restores Arch 2.1.0 and the Roslyn generator dependencies during the build.
+The Arch adapter restores Arch 2.1.0; the generator restores Roslyn. The API-only
+checks use a test storage adapter and run without the Arch package.
 
 ## Consumer setup
 
-Reference `src/ecs/Archy.csproj` from your application. Also reference
+Reference the API layer and selected adapter from your application. Also reference
 `tools/ecs-generator/Archy.Generator.csproj` as an analyzer in each project
 that declares indexed or persistent components:
 
 ```xml
 <ProjectReference Include="path/to/archy/src/ecs/Archy.csproj" />
+<ProjectReference Include="path/to/archy/src/adapters/arch/Archy.Adapters.Arch.csproj" />
 <ProjectReference Include="path/to/archy/tools/ecs-generator/Archy.Generator.csproj"
                   OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 ```
@@ -58,7 +73,8 @@ that declares indexed or persistent components:
 | Persistence | [`[ComponentKey]`, `[TagName]`](src/ecs/serialization/PersistenceAttributes.cs) generate persistence metadata. [`StoreSerializer`](src/ecs/serialization/StoreSerializer.cs) reads/writes components, stores and prefabs, with explicit version migrations and entity-reference remapping. |
 | Prefabs | [`PrefabBuilder`](src/ecs/prefabs/PrefabBuilder.cs) and [`PrefabGraphBuilder`](src/ecs/prefabs/PrefabGraph.cs) build immutable templates; `store.Instantiate(...)` creates independent entities and remaps graph references. |
 
-Each store belongs to its creating thread. Component reads return owned values;
+Each store takes ownership of its supplied storage adapter and belongs to its
+creating thread. Component reads return owned values;
 apply changes through mutation methods to maintain indexes and capture events.
 `Add` requires an absent component, `Update` requires an existing component, and
 `Upsert` handles either case. Components containing mutable reference data need
@@ -77,8 +93,9 @@ removal and dispatches the captured update event.
 
 ```csharp
 using Archy;
+using Archy.Adapters.Arch;
 
-using var store = new EntityStore();
+using var store = new EntityStore(new ArchStorage());
 var entity = store.Create();
 
 entity.Add(new Position { X = 10, Y = 20 });
@@ -125,10 +142,16 @@ True
 10 -> 11
 ```
 
+Store restoration selects an adapter through a factory:
+`serializer.ReadStore(json, static () => new ArchStorage())`. Each call must create
+fresh storage; the restored store owns it and disposes it if loading fails.
+
 ## Reference
 
 - [Storage and integration](src/ecs/IMPLEMENTATION.md)
+- [Adding an adapter](docs/adapters.md)
 - [ECS contracts and original design record](docs/ecs-replacement-spec.md)
 - [C# conventions](docs/tools/csharp.md)
-- Runtime examples and checks: `tests/ecs/`
+- Runtime examples and Arch adapter checks: `tests/ecs/`
+- API checks without Arch: `tests/api/`
 - Compiled generator consumer checks: `tests/ecs-generator/`

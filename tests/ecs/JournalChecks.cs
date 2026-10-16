@@ -8,7 +8,7 @@ internal static class JournalChecks {
     BurstAndNextBatch();
     AlternatingBatches();
     RetainedSnapshots();
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var payload = FailedDeletion(store);
     var construction = FailedConstruction(store);
     GC.Collect();
@@ -31,7 +31,7 @@ internal static class JournalChecks {
 
   [MethodImpl(MethodImplOptions.NoInlining)]
   private static EntitySnapshot SnapshotAfterDisposal() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var first = store.Create();
     first.Add(new JournalPayload(new JournalToken()));
     first.Add(new EventBag([1]));
@@ -45,7 +45,7 @@ internal static class JournalChecks {
   }
 
   private static void AlternatingBatches() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     var delivered = 0;
     var storeDelivered = 0;
@@ -64,7 +64,7 @@ internal static class JournalChecks {
   }
 
   private static void BurstAndNextBatch() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     var values = new List<int>();
     long sequence = 0;

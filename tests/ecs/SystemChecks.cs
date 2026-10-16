@@ -4,7 +4,7 @@ namespace Archy.Tests;
 
 internal static class SystemChecks {
   public static void Run() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entity = store.Create();
     entity.Add(new QueryPosition(1));
     var pipeline = new SystemPipeline(store);

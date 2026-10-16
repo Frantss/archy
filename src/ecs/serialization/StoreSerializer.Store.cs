@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using Archy.Storage;
 
 namespace Archy;
 
@@ -39,14 +40,16 @@ public sealed partial class StoreSerializer {
     await stream.WriteAsync(snapshot, cancellationToken).ConfigureAwait(false);
   }
 
-  public EntityStore ReadStore(Stream stream) {
+  public EntityStore ReadStore(Stream stream, Func<IEntityStorage> createStorage) {
     ArgumentNullException.ThrowIfNull(stream);
     using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
 
-    return this.ReadStore(reader.ReadToEnd());
+    return this.ReadStore(reader.ReadToEnd(), createStorage);
   }
 
-  public EntityStore ReadStore(string json) {
+  public EntityStore ReadStore(string json, Func<IEntityStorage> createStorage) {
+    ArgumentNullException.ThrowIfNull(createStorage);
+
     var document = JsonSerializer.Deserialize<StoreDocument>(json, s_json) ?? throw new JsonException("Missing store document.");
 
     if (document.FormatVersion != 1 || document.Entities is null) throw new JsonException("Unsupported store format.");
@@ -54,7 +57,7 @@ public sealed partial class StoreSerializer {
       || document.Entities.Select(node => node.Id).Distinct(StringComparer.Ordinal).Count() != document.Entities.Length)
       throw new JsonException("Invalid or duplicate entity IDs.");
 
-    var store = new EntityStore();
+    var store = new EntityStore(createStorage());
 
     try {
       store.Construct(document.Entities.Length, entities => {

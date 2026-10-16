@@ -1,4 +1,5 @@
 using Archy;
+using Archy.Adapters.Arch;
 using Archy.Generators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -6,13 +7,15 @@ using System.Runtime.Loader;
 
 var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp14);
 var references = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
-  .Append(typeof(IComponent).Assembly.Location).Select(path => MetadataReference.CreateFromFile(path)).ToArray();
+  .Append(typeof(IComponent).Assembly.Location)
+  .Append(typeof(ArchStorage).Assembly.Location)
+  .Select(path => MetadataReference.CreateFromFile(path)).ToArray();
 var count = 0;
 
 (Compilation Compilation, GeneratorDriverRunResult Result) Generate(string source) {
   var compilation = CSharpCompilation.Create(
     "EcsFixture" + Guid.NewGuid().ToString("N"),
-    [CSharpSyntaxTree.ParseText("using Archy; " + source, parseOptions)], references,
+    [CSharpSyntaxTree.ParseText("using Archy; using Archy.Adapters.Arch; " + source, parseOptions)], references,
     new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable)
   );
   GeneratorDriver driver = CSharpGeneratorDriver.Create([new IndexGenerator().AsSourceGenerator(), new PersistenceGenerator().AsSourceGenerator()], parseOptions: parseOptions);
@@ -31,7 +34,7 @@ var valid = Generate("""
   public partial record struct Identity([property: Indexed(Unique = true)] int Value) : IComponent;
   public static class Consumer {
     public static bool Run() {
-      using var store = new EntityStore();
+      using var store = new EntityStore(new ArchStorage());
       var entity = store.Create();
       entity.Add(new Identity(7));
       return store.ComponentIndex<Identity, int>()[7][0] == entity;
@@ -51,7 +54,7 @@ var primitives = Generate("""
   public partial record struct Token([property: Indexed(Unique = true)] System.Guid Value) : IComponent;
   public static class Consumer {
     public static bool Run() {
-      using var store = new EntityStore();
+      using var store = new EntityStore(new ArchStorage());
       var first = store.Create();
       var second = store.Create();
       first.Add(new Wide(ulong.MaxValue));
@@ -90,7 +93,7 @@ var nested = Generate("""
       public int GetHashCode(string a) => System.StringComparer.OrdinalIgnoreCase.GetHashCode(a);
     }
     public static bool Run() {
-      using var store = new EntityStore();
+      using var store = new EntityStore(new ArchStorage());
       var entity = store.Create();
       entity.Add(new Data(3, "a"));
       entity.Upsert(new Data(4, "b"));
@@ -186,7 +189,7 @@ var interfaceOwner = Generate("""
     [ComponentKey("fixture.private")] private readonly partial record struct Data([property: Indexed] int Value) : IComponent;
     public static bool Run() {
       var serializer = new StoreSerializer(typeof(Data).Assembly);
-      using var store = new EntityStore();
+      using var store = new EntityStore(new ArchStorage());
       var entity = store.Create();
       entity.Add(serializer.ReadComponent<Data>(serializer.WriteComponent(new Data(4))));
       return store.ComponentIndex<Data, int>()[4][0] == entity;
@@ -203,10 +206,11 @@ Require((bool)interfaceAssembly.GetType("ITypes")!.GetMethod("Run")!.Invoke(null
 
 var missingGenerator = CSharpCompilation.Create("MissingGenerator", [CSharpSyntaxTree.ParseText("""
   using Archy;
+  using Archy.Adapters.Arch;
   public readonly partial record struct Link([property: Indexed, EntityReference] Entity Target) : IComponent;
   public static class Consumer {
     public static bool Run() {
-      using var store = new EntityStore();
+      using var store = new EntityStore(new ArchStorage());
       var entity = store.Create();
       try { entity.Add(new Link(entity)); return false; }
       catch (System.InvalidOperationException) { return !entity.Has<Link>(); }

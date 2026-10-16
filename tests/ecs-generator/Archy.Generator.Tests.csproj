@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/ecs/Archy.csproj" />
+    <ProjectReference Include="../../src/adapters/arch/Archy.Adapters.Arch.csproj" />
     <ProjectReference Include="../../tools/ecs-generator/Archy.Generator.csproj" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
   </ItemGroup>

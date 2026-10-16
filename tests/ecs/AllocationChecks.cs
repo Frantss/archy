@@ -15,7 +15,7 @@ internal static class AllocationChecks {
 
   private static void FreshPopulation() {
     var before = GC.GetAllocatedBytesForCurrentThread();
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
 
     for (var i = 0; i < 4096; i++) _ = store.Create();
 
@@ -26,7 +26,7 @@ internal static class AllocationChecks {
   }
 
   private static void DirectQueries() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
 
     for (var i = 0; i < 600; i++) store.Create().Add(new QueryPosition(i));
 
@@ -52,7 +52,7 @@ internal static class AllocationChecks {
   }
 
   private static void Movement(bool observed = false) {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
 
     for (var i = 0; i < 2048; i++) {
       var entity = store.Create();
@@ -85,7 +85,7 @@ internal static class AllocationChecks {
   }
 
   private static void IndexLookups() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
 
     for (var i = 0; i < 2048; i++) {
       var entity = store.Create();
@@ -118,7 +118,7 @@ internal static class AllocationChecks {
   }
 
   private static void EntityChurn() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var nextId = 0;
     var checksum = 0;
 
@@ -146,7 +146,7 @@ internal static class AllocationChecks {
   }
 
   private static void IndexedWrites() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     var entities = Enumerable.Range(0, 256).Select(_ => store.Create()).ToArray();
 
     foreach (var entity in entities) entity.Add(new IndexedGroup { Value = 0 });

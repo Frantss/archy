@@ -4,7 +4,7 @@ namespace Archy.Tests;
 
 internal static class BufferedEventChecks {
   public static void Run() {
-    using var store = new EntityStore();
+    using var store = StoreFactory.Create();
     using var commands = store.CreateCommandBuffer();
     var log = new List<string>();
     using var created = store.Events.Subscribe<EntityCreated>(_ => log.Add("create"));
