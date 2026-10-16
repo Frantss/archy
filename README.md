@@ -47,7 +47,7 @@ dotnet run --no-build --project benchmarks/Archy.Benchmarks -c Release -- --veri
 ```
 
 The Arch adapter restores Arch 2.1.0; the generator restores Roslyn; the benchmark
-project restores BenchmarkDotNet. The API-only checks use the supported naive
+project restores BenchmarkDotNet and Friflo.Engine.ECS. The API-only checks use the supported naive
 adapter and run without the Arch package.
 
 ## Consumer setup
@@ -177,7 +177,7 @@ fresh storage; the restored store owns it and disposes it if loading fails.
 ## Benchmarks
 
 [`benchmarks/Archy.Benchmarks`](benchmarks/Archy.Benchmarks/README.md) compares direct
-Arch, Archy with Arch storage, and Archy with naive storage across six workloads:
+Arch, Friflo, Archy with Arch storage, and Archy with naive storage across six workloads:
 world loading, movement, actor activation, projectile churn, spatial lookups and
 deferred damage notifications. It includes reference-model verification and
 BenchmarkDotNet timing/allocation runs.

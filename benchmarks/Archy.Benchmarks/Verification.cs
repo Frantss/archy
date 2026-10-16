@@ -11,9 +11,12 @@ internal static class Verification {
       foreach (var count in new[] { 0, 1, 257, 1_024, 16_384 }) {
         using var reference = new ReferenceSimulation((scenario, count));
         using var direct = new ArchSimulation((scenario, count));
+        using var friflo = new FrifloSimulation((scenario, count));
         using var archy = new ArchySimulation((scenario, count), static () => new ArchStorage());
         using var naive = new ArchySimulation((scenario, count), static () => new NaiveStorage());
-        (string Name, ISimulation Simulation)[] engines = [("Arch", direct), ("Archy.Arch", archy), ("Archy.Naive", naive)];
+        (string Name, ISimulation Simulation)[] engines = [
+          ("Arch", direct), ("Friflo", friflo), ("Archy.Arch", archy), ("Archy.Naive", naive)
+        ];
 
         foreach (var (name, engine) in engines) {
           Compare(reference.Capture(), engine.Capture(), $"{scenario}/{count}/{name}/initial");
@@ -38,7 +41,7 @@ internal static class Verification {
         }
       }
 
-      Console.WriteLine($"Verified {scenario}: Arch, Archy.Arch and Archy.Naive match the reference model.");
+      Console.WriteLine($"Verified {scenario}: Arch, Friflo, Archy.Arch and Archy.Naive match the reference model.");
     }
 
     Console.WriteLine($"Benchmark verification passed: {comparisons} state comparisons.");

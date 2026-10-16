@@ -1,36 +1,40 @@
+using FrifloEcs = global::Friflo.Engine.ECS;
+
 namespace Archy.Benchmarks;
 
 public enum Scenario { WorldLoad, Movement, ActorActivation, ProjectileChurn, SpatialLookup, DamageNotifications }
 
-internal readonly record struct ActorId : IComponent {
+internal readonly record struct ActorId : IComponent, FrifloEcs.IComponent {
   public long Value { get; init; }
 }
 
-internal readonly record struct Position : IComponent {
+internal readonly record struct Position : IComponent, FrifloEcs.IComponent {
   public long X { get; init; }
   public long Y { get; init; }
 }
 
-internal readonly record struct Velocity : IComponent {
+internal readonly record struct Velocity : IComponent, FrifloEcs.IComponent {
   public long X { get; init; }
   public long Y { get; init; }
 }
 
-internal readonly record struct Health : IComponent {
+internal readonly record struct Health : IComponent, FrifloEcs.IComponent {
   public int Value { get; init; }
 }
 
-internal readonly record struct Lifetime : IComponent {
+internal readonly record struct Lifetime : IComponent, FrifloEcs.IComponent {
   public int Remaining { get; init; }
 }
 
-internal partial struct Cell : IComponent {
+internal partial struct Cell : IComponent, FrifloEcs.IIndexedComponent<int> {
 
   [Indexed]
   public int Value { get; init; }
+
+  public int GetIndexedValue() => this.Value;
 }
 
-internal readonly struct Dormant : ITag;
+internal readonly struct Dormant : ITag, FrifloEcs.ITag;
 
 internal readonly record struct ActorState {
   public long Id { get; init; }

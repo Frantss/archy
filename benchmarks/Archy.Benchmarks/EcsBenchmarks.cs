@@ -17,6 +17,9 @@ public class EcsBenchmarks : IDisposable {
   [GlobalSetup(Target = nameof(DirectArch))]
   public void SetupDirectArch() => this._simulation = new ArchSimulation((this.Scenario, this.EntityCount));
 
+  [GlobalSetup(Target = nameof(Friflo))]
+  public void SetupFriflo() => this._simulation = new FrifloSimulation((this.Scenario, this.EntityCount));
+
   [GlobalSetup(Target = nameof(ArchyArch))]
   public void SetupArchyArch() =>
     this._simulation = new ArchySimulation((this.Scenario, this.EntityCount), static () => new ArchStorage());
@@ -40,6 +43,9 @@ public class EcsBenchmarks : IDisposable {
 
   [Benchmark(Baseline = true)]
   public long DirectArch() => this._simulation.Step();
+
+  [Benchmark]
+  public long Friflo() => this._simulation.Step();
 
   [Benchmark]
   public long ArchyArch() => this._simulation.Step();
