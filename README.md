@@ -189,50 +189,79 @@ dotnet run --project benchmarks/Archy.Benchmarks -c Release
 
 ### Results recorded on 2026-10-16
 
-> Device disclaimer: these results come from one Apple M2 Pro machine with 10
-> physical cores, running macOS Tahoe 26.6.2 and .NET 10.0.11 Arm64 RyuJIT
-> (SDK 10.0.400). The machine used AC power with low-power mode disabled.
-> Hardware, runtime, power settings and other system activity can change the
-> results. macOS denied high-priority scheduling, so the processes ran at normal
-> priority. Several cases had outliers or broad timing distributions; small
-> differences between adapters need another run before drawing conclusions.
+> Device disclaimer: one Apple M2 Pro machine with 10 physical cores, macOS
+> Tahoe 26.6.2, and .NET 10.0.11 Arm64 RyuJIT (SDK 10.0.400), on AC power with
+> low-power mode disabled. macOS denied high-priority scheduling. Substantial
+> background CPU activity was observed, and BenchmarkDotNet flagged multimodal
+> timing distributions. These results describe one uncontrolled run. Small or
+> noisy differences require confirmation on an idle host; hardware, runtime and
+> power settings can also change the results.
 
-All 36 cases passed using BenchmarkDotNet 0.15.8's default measurement job in
-about 18 minutes. Preflight reference verification passed 9,684 state comparisons.
-These are mean times in microseconds per invocation; lower is faster. Actor
-activation measures a complete 16-tick cycle. See the
+All 48 cases passed using BenchmarkDotNet 0.15.8's default measurement job in
+about 41 minutes, with Arch 2.1.0 and Friflo.Engine.ECS 3.6.0. All four
+implementations passed 12,912 reference-model state comparisons before timing.
+The values below come from this four-way run; they replace the earlier
+three-way results.
+
+Times are microseconds per invocation, shown as mean ± BenchmarkDotNet's
+reported 99.9% confidence-interval half-width; lower is faster. Those intervals
+do not account for differences in background activity between processes.
+Actor activation covers a complete 16-tick cycle. See the
 [scenario definitions](benchmarks/Archy.Benchmarks/README.md#scenarios) for each
 invocation's work.
 
-| Scenario | Entities | Direct Arch (µs) | Archy/Arch (µs) | Archy/Naive (µs) |
-| --- | ---: | ---: | ---: | ---: |
-| World loading | 1,024 | 40.73 | 428.22 | 407.82 |
-| Movement | 1,024 | 2.01 | 7.44 | 7.21 |
-| Actor activation | 1,024 | 93.01 | 237.53 | 387.63 |
-| Projectile churn | 1,024 | 11.41 | 87.46 | 99.72 |
-| Spatial lookup | 1,024 | 21.13 | 53.90 | 51.05 |
-| Damage notifications | 1,024 | 1.31 | 5.53 | 5.64 |
-| World loading | 16,384 | 615.03 | 6,654.77 | 6,882.79 |
-| Movement | 16,384 | 34.46 | 139.43 | 131.65 |
-| Actor activation | 16,384 | 1,635.06 | 4,087.69 | 6,470.78 |
-| Projectile churn | 16,384 | 207.09 | 1,455.16 | 1,629.64 |
-| Spatial lookup | 16,384 | 451.75 | 946.56 | 1,047.85 |
-| Damage notifications | 16,384 | 26.26 | 97.00 | 102.83 |
+| Scenario | Entities | Direct Arch (µs) | Friflo (µs) | Archy/Arch (µs) | Archy/Naive (µs) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| World loading | 1,024 | 39.723 ± 1.161 | 31.211 ± 1.187 | 437.752 ± 8.718 | 411.876 ± 3.843 |
+| Movement | 1,024 | 2.164 ± 0.063 | 2.095 ± 0.013 | 7.069 ± 0.030 | 8.038 ± 0.109 |
+| Actor activation | 1,024 | 96.131 ± 1.906 | 100.440 ± 1.843 | 234.091 ± 1.900 | 418.179 ± 8.090 |
+| Projectile churn | 1,024 | 11.450 ± 0.103 | 9.710 ± 0.145 | 86.245 ± 0.353 | 97.828 ± 0.241 |
+| Spatial lookup | 1,024 | 21.330 ± 0.149 | 12.570 ± 0.063 | 52.024 ± 1.036 | 51.172 ± 0.406 |
+| Damage notifications | 1,024 | 1.338 ± 0.013 | 2.096 ± 0.041 | 11.037 ± 1.656 | 5.641 ± 0.110 |
+| World loading | 16,384 | 631.372 ± 5.102 | 1,153.430 ± 74.088 | 6,792.210 ± 109.723 | 6,923.484 ± 137.976 |
+| Movement | 16,384 | 34.071 ± 0.322 | 35.502 ± 0.661 | 127.003 ± 2.450 | 133.651 ± 2.531 |
+| Actor activation | 16,384 | 1,698.094 ± 33.766 | 1,248.792 ± 50.616 | 4,404.948 ± 139.708 | 7,519.503 ± 372.522 |
+| Projectile churn | 16,384 | 203.375 ± 4.022 | 166.712 ± 3.098 | 1,461.296 ± 24.381 | 1,701.323 ± 33.862 |
+| Spatial lookup | 16,384 | 443.162 ± 6.235 | 237.706 ± 3.070 | 970.471 ± 27.427 | 1,139.503 ± 24.624 |
+| Damage notifications | 16,384 | 29.086 ± 0.581 | 43.293 ± 0.861 | 106.257 ± 2.855 | 107.799 ± 3.023 |
 
-Direct Arch had the lowest mean in every case. Naive activation took about 1.6
-times the Arch adapter's time; naive projectile churn took 12% to 14% longer.
-Other adapter differences were smaller, and some changed direction with
-population. Direct Arch uses writable component references, while Archy includes
-its entity, mutation, index and event guarantees. These results compare the
-documented application workloads across those APIs.
+Friflo had lower mean projectile-churn and spatial-lookup times than direct
+Arch at both populations in this run. Native movement means were close; world
+loading changed order with population. The small Archy/Arch notification case
+was particularly noisy: 11.037 µs mean and 4.830 µs standard deviation. That
+result does not establish a reliable notification-performance ranking between
+the Archy adapters.
+
+The implementations have different mutation, ownership and cleanup contracts.
+Arch uses manual spatial buckets; Friflo and Archy use their native indexes.
+Friflo's managed store has no disposal API, so world loading clears the benchmark's
+entity handles and releases the store for garbage collection; Arch and Archy
+call `Dispose`. Read the
+[measurement details](benchmarks/Archy.Benchmarks/README.md#what-is-included)
+before attributing timing differences to a particular API feature.
+
+Managed bytes allocated per invocation are shown below. These measure
+allocation after persistent-scenario setup, not total memory usage.
+
+| Scenario | Entities | Direct Arch (B) | Friflo (B) | Archy/Arch (B) | Archy/Naive (B) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| World loading | 1,024 | 121,920 | 173,976 | 287,848 | 114,472 |
+| Movement | 1,024 | 0 | 0 | 0 | 0 |
+| Actor activation | 1,024 | 0 | 0 | 0 | 0 |
+| Projectile churn | 1,024 | 0 | 0 | 0 | 0 |
+| Spatial lookup | 1,024 | 0 | 0 | 14,317 | 14,317 |
+| Damage notifications | 1,024 | 0 | 0 | 32 | 32 |
+| World loading | 16,384 | 1,378,401 | 3,124,637 | 2,054,392 | 1,465,960 |
+| Movement | 16,384 | 0 | 0 | 0 | 0 |
+| Actor activation | 16,384 | 0 | 0 | 0 | 0 |
+| Projectile churn | 16,384 | 0 | 0 | 0 | 0 |
+| Spatial lookup | 16,384 | 0 | 0 | 267,920 | 268,512 |
+| Damage notifications | 16,384 | 0 | 0 | 32 | 32 |
 
 Movement, activation and projectile churn recorded zero managed allocations for
-all three implementations after setup. Both Archy adapters allocated 14,317 B
-per spatial invocation at 1,024 entities and 267,329 B at 16,384, plus 32 B per
-damage-notification invocation at either population; direct Arch recorded zero
-for those scenarios. At 16,384 entities, world loading allocated 1.31 MiB for
-direct Arch, 1.96 MiB for Archy/Arch and 1.40 MiB for Archy/Naive. These figures
-measure managed bytes allocated per invocation, not total memory usage.
+all four implementations. Friflo and direct Arch also recorded zero allocations
+for spatial lookups and notifications. Both Archy adapters allocated index
+snapshots during spatial lookups and 32 B per notification invocation.
 
 ## Reference
 
