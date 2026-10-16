@@ -2,8 +2,8 @@
 
 `Archy.csproj` is the single ECS runtime, targeting .NET 10 with the
 [Arch 2.1.0 NuGet package](https://www.nuget.org/packages/Arch/2.1.0).
-Its public namespace is `Archy`. Archy extracts this runtime, its generator
-and their checks from Lia without a gameplay or Godot dependency.
+Its public namespace is `Archy`. The runtime, generator and their checks run
+without gameplay or Godot dependencies.
 
 ## Consumer setup
 

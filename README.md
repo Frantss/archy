@@ -14,9 +14,6 @@ for the boundary between the two libraries.
 
 The runtime assembly and namespace are `Archy`; the generator assembly is
 `Archy.Generator`, with its generators in `Archy.Generators`.
-The project runs independently of Godot and Lia gameplay. It was extracted from
-Lia's `custom-ecs` branch at
-`3c40e51f2b4ff36a9e3f711d686a28f124184ef5` (`refactor: consolidate ecs on arch nuget`).
 
 ## Setup and verification
 
@@ -132,6 +129,6 @@ True
 
 - [Storage and integration](src/ecs/IMPLEMENTATION.md)
 - [ECS contracts and original design record](docs/ecs-replacement-spec.md)
-- [C# conventions inherited from Lia](docs/tools/csharp.md)
+- [C# conventions](docs/tools/csharp.md)
 - Runtime examples and checks: `tests/ecs/`
 - Compiled generator consumer checks: `tests/ecs-generator/`

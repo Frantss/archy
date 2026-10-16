@@ -1,14 +1,11 @@
 # Standalone ECS replacement with generated indexes and scoped events
 
-Imported design record from Lia. Earlier storage decisions describe the original
-implementation; the current Arch backend is documented in
-[storage and integration](../src/ecs/IMPLEMENTATION.md). Game-specific steps refer
-to Lia and do not apply to this standalone project.
+Earlier storage decisions describe the original implementation; the current Arch
+backend is documented in [storage and integration](../src/ecs/IMPLEMENTATION.md).
+Game-specific steps do not apply to this standalone project.
 
 ## Problem Statement
 
-Lia currently uses Friflo for entity storage, component queries, indexes,
-relationships, and system execution, supplemented by its own prefab builder.
 The project needs an ECS library whose component writes consistently maintain
 indexes and produce observable events, with explicit mutation semantics and a
 Friflo-like query interface. Writable component references can bypass those
@@ -18,7 +15,7 @@ repetition to component declarations.
 The replacement must support entities, components, tags, indexed components,
 queries, systems, lifecycle and custom events, command buffers, component/store
 serialization, and prefabs. It must live in a nested project and remain usable
-independently of Godot and Lia's gameplay implementation.
+independently of any game engine or gameplay implementation.
 
 ## Solution
 
