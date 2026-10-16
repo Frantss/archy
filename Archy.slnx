@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/ecs/Archy.csproj" />
+  <Project Path="tools/ecs-generator/Archy.Generator.csproj" />
+  <Project Path="tests/ecs/Archy.Tests.csproj" />
+  <Project Path="tests/ecs-generator/Archy.Generator.Tests.csproj" />
+</Solution>
