@@ -184,7 +184,55 @@ BenchmarkDotNet timing/allocation runs.
 
 ```sh
 dotnet run --project benchmarks/Archy.Benchmarks -c Release -- --smoke
+dotnet run --project benchmarks/Archy.Benchmarks -c Release
 ```
+
+### Results recorded on 2026-10-16
+
+> Device disclaimer: these results come from one Apple M2 Pro machine with 10
+> physical cores, running macOS Tahoe 26.6.2 and .NET 10.0.11 Arm64 RyuJIT
+> (SDK 10.0.400). The machine used AC power with low-power mode disabled.
+> Hardware, runtime, power settings and other system activity can change the
+> results. macOS denied high-priority scheduling, so the processes ran at normal
+> priority. Several cases had outliers or broad timing distributions; small
+> differences between adapters need another run before drawing conclusions.
+
+All 36 cases passed using BenchmarkDotNet 0.15.8's default measurement job in
+about 18 minutes. Preflight reference verification passed 9,684 state comparisons.
+These are mean times in microseconds per invocation; lower is faster. Actor
+activation measures a complete 16-tick cycle. See the
+[scenario definitions](benchmarks/Archy.Benchmarks/README.md#scenarios) for each
+invocation's work.
+
+| Scenario | Entities | Direct Arch (µs) | Archy/Arch (µs) | Archy/Naive (µs) |
+| --- | ---: | ---: | ---: | ---: |
+| World loading | 1,024 | 40.73 | 428.22 | 407.82 |
+| Movement | 1,024 | 2.01 | 7.44 | 7.21 |
+| Actor activation | 1,024 | 93.01 | 237.53 | 387.63 |
+| Projectile churn | 1,024 | 11.41 | 87.46 | 99.72 |
+| Spatial lookup | 1,024 | 21.13 | 53.90 | 51.05 |
+| Damage notifications | 1,024 | 1.31 | 5.53 | 5.64 |
+| World loading | 16,384 | 615.03 | 6,654.77 | 6,882.79 |
+| Movement | 16,384 | 34.46 | 139.43 | 131.65 |
+| Actor activation | 16,384 | 1,635.06 | 4,087.69 | 6,470.78 |
+| Projectile churn | 16,384 | 207.09 | 1,455.16 | 1,629.64 |
+| Spatial lookup | 16,384 | 451.75 | 946.56 | 1,047.85 |
+| Damage notifications | 16,384 | 26.26 | 97.00 | 102.83 |
+
+Direct Arch had the lowest mean in every case. Naive activation took about 1.6
+times the Arch adapter's time; naive projectile churn took 12% to 14% longer.
+Other adapter differences were smaller, and some changed direction with
+population. Direct Arch uses writable component references, while Archy includes
+its entity, mutation, index and event guarantees. These results compare the
+documented application workloads across those APIs.
+
+Movement, activation and projectile churn recorded zero managed allocations for
+all three implementations after setup. Both Archy adapters allocated 14,317 B
+per spatial invocation at 1,024 entities and 267,329 B at 16,384, plus 32 B per
+damage-notification invocation at either population; direct Arch recorded zero
+for those scenarios. At 16,384 entities, world loading allocated 1.31 MiB for
+direct Arch, 1.96 MiB for Archy/Arch and 1.40 MiB for Archy/Naive. These figures
+measure managed bytes allocated per invocation, not total memory usage.
 
 ## Reference
 
